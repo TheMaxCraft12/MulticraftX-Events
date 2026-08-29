@@ -366,6 +366,21 @@ footer {
         padding: 70px 25px;
     }
 
+/* =========================
+   TEILNEHMERZÄHLER
+========================= */
+
+.participants-counter {
+    margin-bottom: 20px;
+    padding: 12px 15px;
+
+    background: #202020;
+    border: 1px solid #333;
+    border-radius: 6px;
+
+    color: #55ff55;
+    font-weight: bold;
+}    
     .event-card {
         grid-template-columns: 1fr;
     }
