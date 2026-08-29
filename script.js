@@ -31,71 +31,6 @@ function copyIP() {
 
 
 // ========================================
-// COUNTDOWN
-// ========================================
-
-// 15. Dezember 2026 um 14:30 Uhr
-const eventDate = new Date("2026-12-15T14:30:00").getTime();
-
-
-function updateCountdown() {
-
-    const now = new Date().getTime();
-
-    const difference = eventDate - now;
-
-
-    // Event hat begonnen
-    if (difference <= 0) {
-
-        document.getElementById("countdown").textContent =
-            "🏁 DAS RENNEN LÄUFT!";
-
-        return;
-    }
-
-
-    const days =
-        Math.floor(
-            difference / (1000 * 60 * 60 * 24)
-        );
-
-
-    const hours =
-        Math.floor(
-            (difference % (1000 * 60 * 60 * 24))
-            / (1000 * 60 * 60)
-        );
-
-
-    const minutes =
-        Math.floor(
-            (difference % (1000 * 60 * 60))
-            / (1000 * 60)
-        );
-
-
-    const seconds =
-        Math.floor(
-            (difference % (1000 * 60))
-            / 1000
-        );
-
-
-    document.getElementById("countdown").textContent =
-        `${days}T ` +
-        `${String(hours).padStart(2, "0")}:` +
-        `${String(minutes).padStart(2, "0")}:` +
-        `${String(seconds).padStart(2, "0")}`;
-}
-
-
-// Countdown jede Sekunde aktualisieren
-setInterval(updateCountdown, 1000);
-
-updateCountdown();
-
-// ========================================
 // ANMELDUNG
 // ========================================
 
@@ -222,3 +157,134 @@ async function updateParticipantCount() {
         submitButton.textContent = "🏁 Anmeldung abschicken";
     }
 }
+
+// ========================================
+// EVENT-DATEN AUS SUPABASE
+// ========================================
+
+async function loadEventSettings() {
+
+    const { data, error } = await supabaseDB
+        .from("event_settings")
+        .select("*")
+        .eq("id", 1)
+        .single();
+
+    if (error) {
+        console.error("Fehler beim Laden des Events:", error);
+        return;
+    }
+
+    // Titel
+    document.getElementById("event-title").textContent =
+        "🏁 " + data.title;
+
+    document.getElementById("event-card-title").textContent =
+        data.title;
+
+    // Beschreibung
+    document.getElementById("event-description").textContent =
+        data.description;
+
+    document.getElementById("event-card-description").textContent =
+        data.description;
+
+    // Datum
+    const date = new Date(data.event_date + "T00:00:00");
+
+    const formattedDate = date.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+    });
+
+    document.getElementById("event-date").textContent =
+        formattedDate;
+
+    // Uhrzeit
+    document.getElementById("event-time").textContent =
+        data.event_time.substring(0, 5) + " Uhr";
+
+    // Ort
+    document.getElementById("event-location").textContent =
+        data.location;
+
+    // Server
+    document.getElementById("event-server").textContent =
+        data.server_ip;
+
+    // Countdown-Anzeige
+    document.getElementById("countdown-date").textContent =
+        formattedDate + " • " +
+        data.event_time.substring(0, 5) + " Uhr";
+
+    // Countdown-Zeit aktualisieren
+    const eventDateFromDB =
+        new Date(
+            data.event_date + "T" +
+            data.event_time
+        ).getTime();
+
+    startDatabaseCountdown(eventDateFromDB);
+}
+
+
+// ========================================
+// COUNTDOWN AUS EVENT-DATENBANK
+// ========================================
+
+function startDatabaseCountdown(eventTimestamp) {
+
+    function updateDatabaseCountdown() {
+
+        const now = new Date().getTime();
+
+        const difference =
+            eventTimestamp - now;
+
+        if (difference <= 0) {
+
+            document.getElementById("countdown").textContent =
+                "🏁 DAS RENNEN LÄUFT!";
+
+            return;
+        }
+
+        const days =
+            Math.floor(
+                difference / (1000 * 60 * 60 * 24)
+            );
+
+        const hours =
+            Math.floor(
+                (difference % (1000 * 60 * 60 * 24))
+                / (1000 * 60 * 60)
+            );
+
+        const minutes =
+            Math.floor(
+                (difference % (1000 * 60 * 60))
+                / (1000 * 60)
+            );
+
+        const seconds =
+            Math.floor(
+                (difference % (1000 * 60))
+                / 1000
+            );
+
+        document.getElementById("countdown").textContent =
+            `${days}T ` +
+            `${String(hours).padStart(2, "0")}:` +
+            `${String(minutes).padStart(2, "0")}:` +
+            `${String(seconds).padStart(2, "0")}`;
+    }
+
+    updateDatabaseCountdown();
+
+    setInterval(updateDatabaseCountdown, 1000);
+}
+
+
+// Event laden
+loadEventSettings();
