@@ -152,7 +152,10 @@ form.addEventListener("submit", async function(event) {
 
 
     form.reset();
-
+   
+    // Teilnehmerzahl sofort aktualisieren
+    updateParticipantCount();
+    
 });
 
 // ========================================
