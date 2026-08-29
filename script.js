@@ -784,28 +784,60 @@ let currentUser = null;
 
 async function setupVoting() {
 
-    const {
-        data,
-        error
-    } = await supabaseDB.auth.signInAnonymously();
+    const voteList =
+        document.getElementById("vote-list");
 
+    if (voteList) {
+        voteList.textContent =
+            "🔄 Voting wird vorbereitet...";
+    }
 
-    if (error) {
+    // Prüfen, ob Event geladen wurde
+    if (!currentEvent) {
 
-        console.error(
-            "Fehler bei der anonymen Anmeldung:",
-            error
-        );
+        if (voteList) {
+            voteList.textContent =
+                "❌ Kein Event geladen.";
+        }
 
         return;
     }
 
+    if (voteList) {
+        voteList.textContent =
+            "🔄 Zuschauer wird verbunden...";
+    }
 
-    currentUser =
-        data.user;
+    const {
+        data,
+        error
+    } =
+        await supabaseDB.auth.signInAnonymously();
 
+    if (error) {
 
-    loadVoteParticipants();
+        console.error(
+            "Anonymous Login Fehler:",
+            error
+        );
+
+        if (voteList) {
+            voteList.textContent =
+                "❌ Voting konnte nicht gestartet werden: " +
+                error.message;
+        }
+
+        return;
+    }
+
+    currentUser = data.user;
+
+    if (voteList) {
+        voteList.textContent =
+            "🔄 Fahrer werden geladen...";
+    }
+
+    await loadVoteParticipants();
 }
 
 
