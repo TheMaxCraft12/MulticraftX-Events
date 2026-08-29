@@ -119,6 +119,25 @@ form.addEventListener("submit", async function(event) {
         return;
     }
 
+// ========================================
+// FREIE PLÄTZE PRÜFEN
+// ========================================
+
+const { count, error: countError } = await supabaseDB
+    .from("anmeldungen")
+    .select("*", { count: "exact", head: true });
+
+if (countError) {
+    console.error("Fehler beim Prüfen der Plätze:", countError);
+
+    alert("Die freien Plätze konnten nicht geprüft werden.");
+    return;
+}
+
+if (count >= 20) {
+    alert("❌ Das Rennen ist voll! Es gibt keine freien Plätze mehr.");
+    return;
+}
 
     // Teilnehmer in Supabase speichern
     const { data, error } = await supabaseDB
@@ -176,4 +195,30 @@ async function updateParticipantCount() {
     document.getElementById("participant-count").textContent = count;
 }
 
-updateParticipantCount();
+async function updateParticipantCount() {
+
+    const { count, error } = await supabaseDB
+        .from("anmeldungen")
+        .select("*", { count: "exact", head: true });
+
+    if (error) {
+        console.error("Fehler beim Laden der Teilnehmerzahl:", error);
+        return;
+    }
+
+    const participantCount = document.getElementById("participant-count");
+    const submitButton = form.querySelector("button");
+
+    participantCount.textContent = count;
+
+    if (count >= 20) {
+
+        submitButton.disabled = true;
+        submitButton.textContent = "🚫 Rennen voll";
+
+    } else {
+
+        submitButton.disabled = false;
+        submitButton.textContent = "🏁 Anmeldung abschicken";
+    }
+}
