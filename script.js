@@ -524,6 +524,12 @@ if (form) {
                     .value
                     .trim();
 
+            const racingCompanyId =
+    document
+        .getElementById(
+            "racing-company"
+        )
+        .value;
 
             if (
                 !minecraftName ||
@@ -598,7 +604,7 @@ if (form) {
                 await supabaseDB
                     .from("anmeldungen")
                     .insert([
-                        {
+                       {
                             minecraft_name:
                                 minecraftName,
 
@@ -606,25 +612,44 @@ if (form) {
                                 discordName,
 
                             event_id:
-                                currentEvent.id
+                                currentEvent.id,
+
+                            racing_company_id:
+                                 Number(racingCompanyId)
                         }
                     ]);
 
 
-            if (error) {
+          if (error) {
 
-                console.error(
-                    "Supabase Fehler:",
-                    error
-                );
+    console.error(
+        "Supabase Fehler:",
+        error
+    );
 
-                alert(
-                    "❌ Die Anmeldung konnte nicht gespeichert werden.\n\n" +
-                    error.message
-                );
 
-                return;
-            }
+    // Rennfirma bereits vergeben
+
+    if (
+        error.code === "23505"
+    ) {
+
+        alert(
+            "❌ Diese Rennfirma ist bereits vergeben!\n\n" +
+            "Bitte wähle eine andere Rennfirma."
+        );
+
+        return;
+    }
+
+
+    alert(
+        "❌ Die Anmeldung konnte nicht gespeichert werden.\n\n" +
+        error.message
+    );
+
+    return;
+}
 
 
             alert(
@@ -653,3 +678,100 @@ if (form) {
 // ========================================
 
 loadCurrentEvent();
+
+// ========================================
+// RENN FIRMEN VERFÜGBARKEIT
+// ========================================
+
+async function updateRacingCompanies() {
+
+    if (!currentEvent) {
+        return;
+    }
+
+
+    const select =
+        document.getElementById(
+            "racing-company"
+        );
+
+
+    if (!select) {
+        return;
+    }
+
+
+    const { data, error } =
+        await supabaseDB
+            .from("anmeldungen")
+            .select("racing_company_id")
+            .eq(
+                "event_id",
+                currentEvent.id
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Fehler beim Laden der Rennfirmen:",
+            error
+        );
+
+        return;
+    }
+
+
+    const usedCompanies =
+        data.map(
+            row =>
+                Number(
+                    row.racing_company_id
+                )
+        );
+
+
+    Array.from(
+        select.options
+    ).forEach(option => {
+
+        if (!option.value) {
+            return;
+        }
+
+
+        const companyId =
+            Number(option.value);
+
+
+        if (
+            usedCompanies.includes(
+                companyId
+            )
+        ) {
+
+            option.disabled = true;
+
+            option.textContent =
+                option.textContent
+                .replace(
+                    " – VERGEBEN",
+                    ""
+                ) +
+                " – VERGEBEN";
+
+        } else {
+
+            option.disabled = false;
+
+            option.textContent =
+                option.textContent
+                .replace(
+                    " – VERGEBEN",
+                    ""
+                );
+        }
+
+    });
+
+}
