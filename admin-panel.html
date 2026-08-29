@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Admin Panel – Minecraft Events</title>
+    <title>Admin – Minecraft Events</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -23,126 +23,140 @@
 
 <main>
 
-    <!-- EVENT EINSTELLUNGEN -->
+<section class="section">
 
-    <section class="section">
+    <h2>🏁 Event-Verwaltung</h2>
 
-        <h2>⚙️ Event-Einstellungen</h2>
+    <div class="registration">
 
-        <div class="registration">
+        <button id="new-event">
+            ➕ Neues Event
+        </button>
 
-            <form id="event-form">
+        <div id="events-list">
+            Wird geladen...
+        </div>
 
-                <label for="event-title-input">
-                    Event-Titel
-                </label>
+    </div>
 
-                <input
-                    type="text"
-                    id="event-title-input"
-                    required
-                >
+</section>
 
-                <label for="event-description-input">
-                    Beschreibung
-                </label>
 
-                <input
-                    type="text"
-                    id="event-description-input"
-                >
+<section class="section" id="editor-section" style="display:none;">
 
-                <label for="event-date-input">
-                    Datum
-                </label>
+    <h2>✏️ Event bearbeiten</h2>
 
-                <input
-                    type="date"
-                    id="event-date-input"
-                    required
-                >
+    <div class="registration">
 
-                <label for="event-time-input">
-                    Uhrzeit
-                </label>
+        <form id="event-form">
 
-                <input
-                    type="time"
-                    id="event-time-input"
-                    required
-                >
+            <input type="hidden" id="event-id">
 
-                <label for="event-location-input">
-                    Bereich / Ort
-                </label>
+            <label>Event-Titel</label>
 
-                <input
-                    type="text"
-                    id="event-location-input"
-                    required
-                >
+            <input
+                type="text"
+                id="event-title"
+                required
+            >
 
-                <label for="event-server-input">
-                    Server-IP
-                </label>
 
-                <input
-                    type="text"
-                    id="event-server-input"
-                    required
-                >
+            <label>Beschreibung</label>
 
-                <label for="max-participants-input">
-                    Maximale Teilnehmer
-                </label>
+            <input
+                type="text"
+                id="event-description"
+            >
 
-                <input
-                    type="number"
-                    id="max-participants-input"
-                    min="1"
-                    max="1000"
-                    required
-                >
 
-                <button type="submit">
-                    💾 Event speichern
-                </button>
+            <label>Datum</label>
 
-            </form>
+            <input
+                type="date"
+                id="event-date"
+                required
+            >
 
-            <br>
 
-            <button id="toggle-registration">
-                🔓 Anmeldung wird geladen...
+            <label>Uhrzeit</label>
+
+            <input
+                type="time"
+                id="event-time"
+                required
+            >
+
+
+            <label>Bereich / Ort</label>
+
+            <input
+                type="text"
+                id="event-location"
+            >
+
+
+            <label>Server-IP</label>
+
+            <input
+                type="text"
+                id="event-server"
+            >
+
+
+            <label>Maximale Teilnehmer</label>
+
+            <input
+                type="number"
+                id="event-max"
+                min="1"
+                max="1000"
+                value="20"
+                required
+            >
+
+
+            <button type="submit">
+                💾 Speichern
             </button>
 
+            <button
+                type="button"
+                id="cancel-edit"
+            >
+                ❌ Abbrechen
+            </button>
+
+        </form>
+
+    </div>
+
+</section>
+
+
+<section class="section">
+
+    <h2>👥 Teilnehmer</h2>
+
+    <div class="registration">
+
+        <h3 id="selected-event-name">
+            Kein Event ausgewählt
+        </h3>
+
+        <p>
+            Teilnehmer:
+            <strong id="participant-count">0</strong>
+            /
+            <strong id="participant-max">0</strong>
+        </p>
+
+        <div id="participants">
+            Wähle ein Event aus.
         </div>
 
-    </section>
+    </div>
 
-
-    <!-- TEILNEHMER -->
-
-    <section class="section">
-
-        <h2>🏁 Teilnehmer</h2>
-
-        <div class="registration">
-
-            <h3>
-                Teilnehmer:
-                <span id="participant-count">0</span>
-                /
-                <span id="max-participants-display">20</span>
-            </h3>
-
-            <div id="participants">
-                Wird geladen...
-            </div>
-
-        </div>
-
-    </section>
+</section>
 
 </main>
 
@@ -165,78 +179,219 @@ const supabaseDB =
     );
 
 
+let selectedEventId = null;
+
+
 // ========================================
 // ADMIN PRÜFEN
 // ========================================
 
 async function checkAdmin() {
 
-    const { data, error } =
+    const { data } =
         await supabaseDB.auth.getUser();
 
-    if (error || !data.user) {
+    if (!data.user) {
 
         window.location.href = "admin.html";
 
         return;
     }
 
-    loadEventSettings();
-    loadParticipants();
+    loadEvents();
 }
 
 
 // ========================================
-// EVENT-DATEN LADEN
+// EVENTS LADEN
 // ========================================
 
-async function loadEventSettings() {
+async function loadEvents() {
 
     const { data, error } =
         await supabaseDB
-            .from("event_settings")
+            .from("events")
             .select("*")
-            .eq("id", 1)
+            .order("event_date", {
+                ascending: true
+            });
+
+
+    if (error) {
+
+        console.error(error);
+
+        document.getElementById("events-list")
+            .textContent =
+            "Fehler beim Laden der Events.";
+
+        return;
+    }
+
+
+    const container =
+        document.getElementById("events-list");
+
+
+    container.innerHTML = "";
+
+
+    if (data.length === 0) {
+
+        container.textContent =
+            "Noch keine Events.";
+
+        return;
+    }
+
+
+    data.forEach(event => {
+
+        const box =
+            document.createElement("div");
+
+
+        box.style.padding = "20px";
+        box.style.marginTop = "15px";
+        box.style.background = "#202020";
+        box.style.borderRadius = "8px";
+
+
+        box.innerHTML = `
+
+            <h3>🏁 ${event.title}</h3>
+
+            <p>
+                📅 ${event.event_date}
+                •
+                🕝 ${event.event_time.substring(0,5)}
+            </p>
+
+            <p>
+                🌎 ${event.location || ""}
+            </p>
+
+            <br>
+
+            <button
+                onclick="editEvent(${event.id})"
+            >
+                ✏️ Bearbeiten
+            </button>
+
+            <button
+                onclick="selectEvent(${event.id})"
+            >
+                👥 Teilnehmer
+            </button>
+
+            <button
+                onclick="deleteEvent(${event.id})"
+            >
+                🗑️ Löschen
+            </button>
+
+        `;
+
+
+        container.appendChild(box);
+
+    });
+
+}
+
+
+// ========================================
+// NEUES EVENT
+// ========================================
+
+document
+    .getElementById("new-event")
+    .addEventListener("click", function() {
+
+        selectedEventId = null;
+
+        document.getElementById("event-form")
+            .reset();
+
+        document.getElementById("event-id")
+            .value = "";
+
+        document.getElementById("editor-section")
+            .style.display = "block";
+
+        window.scrollTo({
+            top: document.getElementById(
+                "editor-section"
+            ).offsetTop - 80,
+
+            behavior: "smooth"
+        });
+
+    });
+
+
+// ========================================
+// EVENT BEARBEITEN
+// ========================================
+
+async function editEvent(id) {
+
+    const { data, error } =
+        await supabaseDB
+            .from("events")
+            .select("*")
+            .eq("id", id)
             .single();
 
 
     if (error) {
 
-        console.error(
-            "Fehler beim Laden des Events:",
-            error
+        alert(
+            "❌ Event konnte nicht geladen werden."
         );
 
         return;
     }
 
 
-    document.getElementById("event-title-input").value =
-        data.title || "";
+    document.getElementById("event-id")
+        .value = data.id;
 
-    document.getElementById("event-description-input").value =
-        data.description || "";
+    document.getElementById("event-title")
+        .value = data.title;
 
-    document.getElementById("event-date-input").value =
-        data.event_date || "";
+    document.getElementById("event-description")
+        .value = data.description || "";
 
-    document.getElementById("event-time-input").value =
-        data.event_time
-            ? data.event_time.substring(0, 5)
-            : "";
+    document.getElementById("event-date")
+        .value = data.event_date;
 
-    document.getElementById("event-location-input").value =
-        data.location || "";
+    document.getElementById("event-time")
+        .value = data.event_time.substring(0,5);
 
-    document.getElementById("event-server-input").value =
-        data.server_ip || "";
+    document.getElementById("event-location")
+        .value = data.location || "";
 
-    document.getElementById("max-participants-input").value =
-        data.max_participants || 20;
+    document.getElementById("event-server")
+        .value = data.server_ip || "";
 
-    updateRegistrationButton(
-        data.registration_open
-    );
+    document.getElementById("event-max")
+        .value = data.max_participants;
+
+
+    document.getElementById("editor-section")
+        .style.display = "block";
+
+
+    window.scrollTo({
+        top: document.getElementById(
+            "editor-section"
+        ).offsetTop - 80,
+
+        behavior: "smooth"
+    });
+
 }
 
 
@@ -246,193 +401,217 @@ async function loadEventSettings() {
 
 document
     .getElementById("event-form")
-    .addEventListener("submit", async function(event) {
+    .addEventListener("submit", async function(e) {
 
-        event.preventDefault();
-
-
-        const title =
-            document.getElementById("event-title-input").value.trim();
-
-        const description =
-            document.getElementById("event-description-input").value.trim();
-
-        const eventDate =
-            document.getElementById("event-date-input").value;
-
-        const eventTime =
-            document.getElementById("event-time-input").value;
-
-        const location =
-            document.getElementById("event-location-input").value.trim();
-
-        const serverIP =
-            document.getElementById("event-server-input").value.trim();
-
-        const maxParticipants =
-            Number(
-                document.getElementById("max-participants-input").value
-            );
+        e.preventDefault();
 
 
-        const { error } =
-            await supabaseDB
-                .from("event_settings")
-                .update({
-                    title: title,
-                    description: description,
-                    event_date: eventDate,
-                    event_time: eventTime,
-                    location: location,
-                    server_ip: serverIP,
-                    max_participants: maxParticipants
-                })
-                .eq("id", 1);
+        const id =
+            document.getElementById("event-id")
+                .value;
 
 
-        if (error) {
+        const eventData = {
 
-            console.error(error);
+            title:
+                document.getElementById(
+                    "event-title"
+                ).value.trim(),
+
+            description:
+                document.getElementById(
+                    "event-description"
+                ).value.trim(),
+
+            event_date:
+                document.getElementById(
+                    "event-date"
+                ).value,
+
+            event_time:
+                document.getElementById(
+                    "event-time"
+                ).value,
+
+            location:
+                document.getElementById(
+                    "event-location"
+                ).value.trim(),
+
+            server_ip:
+                document.getElementById(
+                    "event-server"
+                ).value.trim(),
+
+            max_participants:
+                Number(
+                    document.getElementById(
+                        "event-max"
+                    ).value
+                )
+        };
+
+
+        let result;
+
+
+        if (id) {
+
+            result =
+                await supabaseDB
+                    .from("events")
+                    .update(eventData)
+                    .eq("id", id);
+
+        } else {
+
+            result =
+                await supabaseDB
+                    .from("events")
+                    .insert([eventData]);
+
+        }
+
+
+        if (result.error) {
+
+            console.error(result.error);
 
             alert(
-                "❌ Event konnte nicht gespeichert werden:\n" +
-                error.message
+                "❌ Fehler:\n" +
+                result.error.message
             );
 
             return;
         }
 
 
-        alert("✅ Event wurde gespeichert!");
+        alert("✅ Event gespeichert!");
 
-        loadEventSettings();
+        document.getElementById("editor-section")
+            .style.display = "none";
+
+        loadEvents();
 
     });
 
 
 // ========================================
-// ANMELDUNG ÖFFNEN / SCHLIESSEN
+// EVENT LÖSCHEN
 // ========================================
 
-const toggleButton =
-    document.getElementById("toggle-registration");
+async function deleteEvent(id) {
 
-
-toggleButton.addEventListener("click", async function() {
-
-    const { data, error } =
-        await supabaseDB
-            .from("event_settings")
-            .select("registration_open")
-            .eq("id", 1)
-            .single();
-
-
-    if (error) {
-
-        alert("❌ Status konnte nicht geladen werden.");
-
+    if (
+        !confirm(
+            "Event wirklich löschen?"
+        )
+    ) {
         return;
     }
 
 
-    const newStatus =
-        !data.registration_open;
-
-
-    const { error: updateError } =
+    const { error } =
         await supabaseDB
-            .from("event_settings")
-            .update({
-                registration_open: newStatus
-            })
-            .eq("id", 1);
+            .from("events")
+            .delete()
+            .eq("id", id);
 
 
-    if (updateError) {
+    if (error) {
 
         alert(
-            "❌ Status konnte nicht geändert werden:\n" +
-            updateError.message
+            "❌ Event konnte nicht gelöscht werden:\n" +
+            error.message
         );
 
         return;
     }
 
 
-    updateRegistrationButton(newStatus);
+    alert("🗑️ Event gelöscht!");
 
-    alert(
-        newStatus
-            ? "🔓 Anmeldung geöffnet!"
-            : "🔒 Anmeldung geschlossen!"
-    );
+    document.getElementById(
+        "participants"
+    ).textContent =
+        "Wähle ein Event aus.";
 
-});
+    loadEvents();
 
-
-function updateRegistrationButton(isOpen) {
-
-    toggleButton.textContent =
-        isOpen
-            ? "🔓 Anmeldung geöffnet – schließen"
-            : "🔒 Anmeldung geschlossen – öffnen";
 }
 
 
 // ========================================
-// TEILNEHMER LADEN
+// EVENT AUSWÄHLEN
 // ========================================
 
-async function loadParticipants() {
+async function selectEvent(id) {
 
-    const { data, error } =
+    selectedEventId = id;
+
+
+    const { data: event, error } =
         await supabaseDB
-            .from("anmeldungen")
+            .from("events")
             .select("*")
-            .order("id", { ascending: true });
+            .eq("id", id)
+            .single();
 
 
     if (error) {
 
         console.error(error);
 
-        document.getElementById("participants").textContent =
-            "Fehler beim Laden der Teilnehmer.";
+        return;
+    }
+
+
+    document.getElementById(
+        "selected-event-name"
+    ).textContent =
+        "🏁 " + event.title;
+
+
+    document.getElementById(
+        "participant-max"
+    ).textContent =
+        event.max_participants;
+
+
+    const result =
+        await supabaseDB
+            .from("anmeldungen")
+            .select("*")
+            .eq("event_id", id)
+            .order("id", {
+                ascending: true
+            });
+
+
+    if (result.error) {
+
+        console.error(result.error);
 
         return;
     }
 
 
-    document.getElementById("participant-count")
-        .textContent = data.length;
-
-
-    const eventResult =
-        await supabaseDB
-            .from("event_settings")
-            .select("max_participants")
-            .eq("id", 1)
-            .single();
-
-
-    if (!eventResult.error) {
-
-        document.getElementById(
-            "max-participants-display"
-        ).textContent =
-            eventResult.data.max_participants;
-    }
+    document.getElementById(
+        "participant-count"
+    ).textContent =
+        result.data.length;
 
 
     const container =
-        document.getElementById("participants");
+        document.getElementById(
+            "participants"
+        );
 
 
     container.innerHTML = "";
 
 
-    if (data.length === 0) {
+    if (result.data.length === 0) {
 
         container.textContent =
             "Noch keine Teilnehmer.";
@@ -441,7 +620,7 @@ async function loadParticipants() {
     }
 
 
-    data.forEach(function(participant) {
+    result.data.forEach(participant => {
 
         const row =
             document.createElement("div");
@@ -454,6 +633,7 @@ async function loadParticipants() {
 
 
         row.innerHTML = `
+
             <strong>
                 ${participant.minecraft_name}
             </strong>
@@ -466,10 +646,11 @@ async function loadParticipants() {
             <br><br>
 
             <button
-                onclick="deleteParticipant('${participant.id}')"
+                onclick="deleteParticipant(${participant.id})"
             >
                 🗑️ Löschen
             </button>
+
         `;
 
 
@@ -488,10 +669,9 @@ async function deleteParticipant(id) {
 
     if (
         !confirm(
-            "Diesen Teilnehmer wirklich löschen?"
+            "Teilnehmer wirklich löschen?"
         )
     ) {
-
         return;
     }
 
@@ -514,9 +694,24 @@ async function deleteParticipant(id) {
     }
 
 
-    loadParticipants();
+    selectEvent(selectedEventId);
 
 }
+
+
+// ========================================
+// ABBRECHEN
+// ========================================
+
+document
+    .getElementById("cancel-edit")
+    .addEventListener("click", function() {
+
+        document.getElementById(
+            "editor-section"
+        ).style.display = "none";
+
+    });
 
 
 // ========================================
@@ -525,9 +720,9 @@ async function deleteParticipant(id) {
 
 document
     .getElementById("logout")
-    .addEventListener("click", async function(event) {
+    .addEventListener("click", async function(e) {
 
-        event.preventDefault();
+        e.preventDefault();
 
         await supabaseDB.auth.signOut();
 
@@ -536,9 +731,7 @@ document
     });
 
 
-// ========================================
 // START
-// ========================================
 
 checkAdmin();
 
