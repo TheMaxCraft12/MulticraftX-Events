@@ -775,3 +775,433 @@ async function updateRacingCompanies() {
     });
 
 }
+
+// ========================================
+// VOTE SYSTEM
+// ========================================
+
+let currentUser = null;
+
+
+// ========================================
+// ANONYMEN BENUTZER ANMELDEN
+// ========================================
+
+async function setupVoting() {
+
+    const {
+        data,
+        error
+    } = await supabaseDB.auth.signInAnonymously();
+
+
+    if (error) {
+
+        console.error(
+            "Fehler bei der anonymen Anmeldung:",
+            error
+        );
+
+        return;
+    }
+
+
+    currentUser =
+        data.user;
+
+
+    loadVoteParticipants();
+}
+
+
+// ========================================
+// TEILNEHMER FÜR VOTE LADEN
+// ========================================
+
+async function loadVoteParticipants() {
+
+    if (!currentEvent) {
+        return;
+    }
+
+
+    const voteList =
+        document.getElementById(
+            "vote-list"
+        );
+
+
+    if (!voteList) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseDB
+            .from("anmeldungen")
+            .select(
+                "id, minecraft_name"
+            )
+            .eq(
+                "event_id",
+                currentEvent.id
+            )
+            .order(
+                "minecraft_name"
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Fehler beim Laden der Fahrer:",
+            error
+        );
+
+        voteList.textContent =
+            "❌ Fahrer konnten nicht geladen werden.";
+
+        return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+        voteList.textContent =
+            "Noch keine Fahrer angemeldet.";
+
+        return;
+    }
+
+
+    voteList.innerHTML = "";
+
+
+    data.forEach(
+        participant => {
+
+            const label =
+                document.createElement(
+                    "label"
+                );
+
+
+            label.style.display =
+                "block";
+
+            label.style.margin =
+                "10px 0";
+
+
+            label.innerHTML = `
+                <input
+                    type="radio"
+                    name="vote"
+                    value="${participant.id}"
+                >
+                🏎️ ${participant.minecraft_name}
+            `;
+
+
+            voteList.appendChild(
+                label
+            );
+        }
+    );
+
+
+    checkIfAlreadyVoted();
+}
+
+
+// ========================================
+// PRÜFEN, OB SCHON ABGESTIMMT
+// ========================================
+
+async function checkIfAlreadyVoted() {
+
+    if (
+        !currentUser ||
+        !currentEvent
+    ) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseDB
+            .from("votes")
+            .select("id")
+            .eq(
+                "event_id",
+                currentEvent.id
+            )
+            .eq(
+                "voter_id",
+                currentUser.id
+            )
+            .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Fehler beim Prüfen des Votes:",
+            error
+        );
+
+        return;
+    }
+
+
+    if (data) {
+
+        const button =
+            document.getElementById(
+                "vote-button"
+            );
+
+
+        if (button) {
+
+            button.disabled =
+                true;
+
+            button.textContent =
+                "✅ Du hast bereits abgestimmt";
+        }
+
+    }
+}
+
+
+// ========================================
+// VOTE ABSCHICKEN
+// ========================================
+
+document
+    .getElementById("vote-button")
+    ?.addEventListener(
+        "click",
+        async function() {
+
+            if (
+                !currentUser ||
+                !currentEvent
+            ) {
+
+                alert(
+                    "❌ Das Voting ist noch nicht bereit."
+                );
+
+                return;
+            }
+
+
+            const selected =
+                document.querySelector(
+                    'input[name="vote"]:checked'
+                );
+
+
+            if (!selected) {
+
+                alert(
+                    "Bitte wähle zuerst einen Fahrer aus."
+                );
+
+                return;
+            }
+
+
+            const participantId =
+                Number(
+                    selected.value
+                );
+
+
+            const {
+                error
+            } =
+                await supabaseDB
+                    .from("votes")
+                    .insert([
+                        {
+                            event_id:
+                                currentEvent.id,
+
+                            voter_id:
+                                currentUser.id,
+
+                            participant_id:
+                                participantId
+                        }
+                    ]);
+
+
+            if (error) {
+
+                if (
+                    error.code ===
+                    "23505"
+                ) {
+
+                    alert(
+                        "❌ Du hast bereits für dieses Event abgestimmt."
+                    );
+
+                    return;
+                }
+
+
+                console.error(
+                    "Vote-Fehler:",
+                    error
+                );
+
+
+                alert(
+                    "❌ Deine Stimme konnte nicht gespeichert werden."
+                );
+
+                return;
+            }
+
+
+            alert(
+                "✅ Deine Stimme wurde gespeichert!"
+            );
+
+
+            const button =
+                document.getElementById(
+                    "vote-button"
+                );
+
+
+            button.disabled =
+                true;
+
+            button.textContent =
+                "✅ Stimme abgegeben";
+
+
+            loadVoteResults();
+        }
+    );
+
+
+// ========================================
+// VOTE-ERGEBNISSE
+// ========================================
+
+async function loadVoteResults() {
+
+    if (!currentEvent) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseDB
+            .from("votes")
+            .select(
+                "participant_id, anmeldungen(minecraft_name)"
+            )
+            .eq(
+                "event_id",
+                currentEvent.id
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Fehler beim Laden der Ergebnisse:",
+            error
+        );
+
+        return;
+    }
+
+
+    const results = {};
+
+
+    data.forEach(
+        vote => {
+
+            const id =
+                vote.participant_id;
+
+
+            if (!results[id]) {
+
+                results[id] = {
+                    name:
+                        vote.anmeldungen
+                            ?.minecraft_name
+                            || "Unbekannt",
+
+                    votes: 0
+                };
+            }
+
+
+            results[id].votes++;
+        }
+    );
+
+
+    const sorted =
+        Object.values(results)
+            .sort(
+                (a, b) =>
+                    b.votes -
+                    a.votes
+            );
+
+
+    const resultsElement =
+        document.getElementById(
+            "vote-results"
+        );
+
+
+    if (!resultsElement) {
+        return;
+    }
+
+
+    resultsElement.innerHTML =
+        "<h3>📊 Aktuelle Ergebnisse</h3>";
+
+
+    sorted.forEach(
+        result => {
+
+            const p =
+                document.createElement(
+                    "p"
+                );
+
+
+            p.textContent =
+                `${result.name}: ${result.votes} Stimme(n)`;
+
+
+            resultsElement.appendChild(
+                p
+            );
+        }
+    );
+}
