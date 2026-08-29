@@ -106,6 +106,9 @@ async function loadCurrentEvent() {
 
     currentEvent = data[0];
 
+    if (!currentEvent) {
+    throw new Error("Kein Event gefunden.");
+}
 
     // ========================================
     // EVENT-TEXTE
@@ -134,22 +137,22 @@ async function loadCurrentEvent() {
 
     if (eventTitle) {
         eventTitle.textContent =
-            "🏁 " + data.title;
+            "🏁 " + currentEvent.title;
     }
 
     if (cardTitle) {
         cardTitle.textContent =
-            data.title;
+            currentEvent.title;
     }
 
     if (description) {
         description.textContent =
-            data.description || "";
+            currentEvent.description || "";
     }
 
     if (cardDescription) {
         cardDescription.textContent =
-            data.description || "";
+            currentEvent.description || "";
     }
 
 
@@ -159,7 +162,7 @@ async function loadCurrentEvent() {
 
     const date =
         new Date(
-            data.event_date +
+            currentEvent.event_date +
             "T00:00:00"
         );
 
@@ -187,27 +190,21 @@ async function loadCurrentEvent() {
     }
 
 
-    // ========================================
-    // UHRZEIT
-    // ========================================
+// ========================================
+// UHRZEIT
+// ========================================
 
-   const time =data.event_time
-        ? data.event_time.substring(0, 5)
-        : "00:00"; 
+const time = currentEvent.event_time
+    ? String(currentEvent.event_time).substring(0, 5)
+    : "00:00";
 
+const timeElement =
+    document.getElementById("event-time");
 
-    const timeElement =
-        document.getElementById(
-            "event-time"
-        );
-
-
-    if (timeElement) {
-        timeElement.textContent =
-            time + " Uhr";
-    }
-
-
+if (timeElement) {
+    timeElement.textContent =
+        time + " Uhr";
+}
     // ========================================
     // ORT
     // ========================================
@@ -236,7 +233,7 @@ async function loadCurrentEvent() {
 
     if (serverElement) {
         serverElement.textContent =
-            data.server_ip || "";
+            currentEvent.server_ip || "";
     }
 
 
@@ -262,9 +259,9 @@ async function loadCurrentEvent() {
 
     const eventTimestamp =
         new Date(
-            data.event_date +
+            currentEvent.event_date +
             "T" +
-            data.event_time
+            currentEvent.event_time
         ).getTime();
 
 
