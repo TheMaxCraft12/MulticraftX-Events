@@ -1134,11 +1134,7 @@ async function loadVoteResults() {
         return;
     }
 
-
-    const {
-        data,
-        error
-    } =
+    const { data, error } =
         await supabaseDB
             .from("votes")
             .select(
@@ -1148,7 +1144,6 @@ async function loadVoteResults() {
                 "event_id",
                 currentEvent.id
             );
-
 
     if (error) {
 
@@ -1160,41 +1155,35 @@ async function loadVoteResults() {
         return;
     }
 
-
     const results = {};
 
+    data.forEach(vote => {
 
-    data.forEach(
-        vote => {
+        const id = vote.participant_id;
 
-            const id =
-                vote.participant_id;
+        if (!results[id]) {
 
+            results[id] = {
+                name:
+                    vote.anmeldungen?.minecraft_name ||
+                    "Unbekannt",
 
-            if (!results[id]) {
-
-                results[id] = {
-                    name:
-                        vote.anmeldungen
-                            ?.minecraft_name
-                            || "Unbekannt",
-
-                    votes: 0
-                };
-            }
-
-
-            results[id].votes++;
+                votes: 0
+            };
         }
-    );
+
+        results[id].votes++;
+    });
+
+
+    const totalVotes = data.length;
 
 
     const sorted =
         Object.values(results)
             .sort(
                 (a, b) =>
-                    b.votes -
-                    a.votes
+                    b.votes - a.votes
             );
 
 
@@ -1209,28 +1198,66 @@ async function loadVoteResults() {
     }
 
 
-    resultsElement.innerHTML =
-        "<h3>📊 Aktuelle Ergebnisse</h3>";
+    resultsElement.innerHTML = `
+        <h3>📊 Aktuelle Ergebnisse</h3>
+        <p class="vote-total">
+            ${totalVotes} Stimme${totalVotes === 1 ? "" : "n"} insgesamt
+        </p>
+    `;
 
 
-    sorted.forEach(
-        result => {
+    if (sorted.length === 0) {
 
-            const p =
-                document.createElement(
-                    "p"
-                );
+        resultsElement.innerHTML += `
+            <p>Noch keine Stimmen abgegeben.</p>
+        `;
 
-
-            p.textContent =
-                `${result.name}: ${result.votes} Stimme(n)`;
+        return;
+    }
 
 
-            resultsElement.appendChild(
-                p
-            );
-        }
-    );
+    sorted.forEach(result => {
+
+        const percentage =
+            totalVotes > 0
+                ? Math.round(
+                    (result.votes / totalVotes) * 100
+                )
+                : 0;
+
+
+        const resultDiv =
+            document.createElement("div");
+
+        resultDiv.className =
+            "vote-result";
+
+
+        resultDiv.innerHTML = `
+            <div class="vote-result-header">
+                <strong>
+                    🏎️ ${result.name}
+                </strong>
+
+                <span>
+                    ${percentage}% ·
+                    ${result.votes} Stimme${result.votes === 1 ? "" : "n"}
+                </span>
+            </div>
+
+            <div class="vote-bar-background">
+                <div
+                    class="vote-bar"
+                    style="width: ${percentage}%"
+                ></div>
+            </div>
+        `;
+
+
+        resultsElement.appendChild(
+            resultDiv
+        );
+    });
 }
 
 async function startWebsite() {
