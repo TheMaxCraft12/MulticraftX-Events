@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Panel – Minecraft Events</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+    <div class="logo">🔐 EVENT ADMIN</div>
+
+    <nav>
+        <a href="index.html">Website</a>
+        <a href="#" id="logout">Abmelden</a>
+    </nav>
+</header>
+
+
+<main>
+
+    <section class="section">
+
+        <h2>🏁 Teilnehmer</h2>
+
+        <div class="registration">
+
+            <h3>
+                Teilnehmer:
+                <span id="participant-count">0</span> / 20
+            </h3>
+
+            <div id="participants">
+                Wird geladen...
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+    "https://hdbgpedywtsiazbawbao.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_Ab0ub7SN99UIjDdXCdSNNw_4FSlDmDa";
+
+
+const supabaseDB =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+// ========================================
+// ADMIN PRÜFEN
+// ========================================
+
+async function checkAdmin() {
+
+    const { data, error } =
+        await supabaseDB.auth.getUser();
+
+    if (error || !data.user) {
+
+        window.location.href = "admin.html";
+
+        return;
+    }
+
+    loadParticipants();
+}
+
+
+// ========================================
+// TEILNEHMER LADEN
+// ========================================
+
+async function loadParticipants() {
+
+    const { data, error } =
+        await supabaseDB
+            .from("anmeldungen")
+            .select("*")
+            .order("id", { ascending: true });
+
+
+    if (error) {
+
+        console.error(error);
+
+        document.getElementById("participants").textContent =
+            "Fehler beim Laden der Teilnehmer.";
+
+        return;
+    }
+
+
+    document.getElementById("participant-count")
+        .textContent = data.length;
+
+
+    const container =
+        document.getElementById("participants");
+
+
+    container.innerHTML = "";
+
+
+    if (data.length === 0) {
+
+        container.textContent =
+            "Noch keine Teilnehmer.";
+
+        return;
+    }
+
+
+    data.forEach(function(participant) {
+
+        const row =
+            document.createElement("div");
+
+        row.style.padding = "15px";
+        row.style.marginTop = "10px";
+        row.style.background = "#202020";
+        row.style.borderRadius = "6px";
+
+
+        row.innerHTML = `
+            <strong>${participant.minecraft_name}</strong>
+            <br>
+            Discord: ${participant.discord_name}
+            <br><br>
+            <button onclick="deleteParticipant('${participant.id}')">
+                🗑️ Löschen
+            </button>
+        `;
+
+
+        container.appendChild(row);
+
+    });
+
+}
+
+
+// ========================================
+// TEILNEHMER LÖSCHEN
+// ========================================
+
+async function deleteParticipant(id) {
+
+    if (!confirm("Diesen Teilnehmer wirklich löschen?")) {
+        return;
+    }
+
+
+    const { error } =
+        await supabaseDB
+            .from("anmeldungen")
+            .delete()
+            .eq("id", id);
+
+
+    if (error) {
+
+        alert(
+            "❌ Löschen fehlgeschlagen:\n" +
+            error.message
+        );
+
+        return;
+    }
+
+
+    loadParticipants();
+}
+
+
+// ========================================
+// LOGOUT
+// ========================================
+
+document
+    .getElementById("logout")
+    .addEventListener("click", async function(event) {
+
+        event.preventDefault();
+
+        await supabaseDB.auth.signOut();
+
+        window.location.href = "admin.html";
+
+    });
+
+
+// Start
+checkAdmin();
+
+</script>
+
+</body>
+</html>
