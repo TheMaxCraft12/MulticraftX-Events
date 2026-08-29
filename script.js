@@ -191,8 +191,7 @@ async function loadCurrentEvent() {
     // UHRZEIT
     // ========================================
 
-   const time =
-    data.event_time
+   const time =data.event_time
         ? data.event_time.substring(0, 5)
         : "00:00"; 
 
