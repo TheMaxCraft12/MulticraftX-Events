@@ -58,59 +58,58 @@ form.addEventListener("submit", async function(event) {
 // FREIE PLÄTZE PRÜFEN
 // ========================================
 
-const { count, error: countError } = await supabaseDB
-    .from("anmeldungen")
-    .select("*", { count: "exact", head: true });
+if (!currentEvent) {
+
+    alert("❌ Das Event konnte nicht geladen werden.");
+
+    return;
+}
+
+
+if (!currentEvent.registration_open) {
+
+    alert("🔒 Die Anmeldung für dieses Event ist geschlossen.");
+
+    return;
+}
+
+
+const { count, error: countError } =
+    await supabaseDB
+        .from("anmeldungen")
+        .select("*", {
+            count: "exact",
+            head: true
+        })
+        .eq("event_id", currentEvent.id);
+
 
 if (countError) {
-    console.error("Fehler beim Prüfen der Plätze:", countError);
 
-    alert("Die freien Plätze konnten nicht geprüft werden.");
-    return;
-}
-
-if (count >= 20) {
-    alert("❌ Das Rennen ist voll! Es gibt keine freien Plätze mehr.");
-    return;
-}
-
-    // Teilnehmer in Supabase speichern
-    const { data, error } = await supabaseDB
-        .from("anmeldungen")
-        .insert([
-            {
-                minecraft_name: minecraftName,
-                discord_name: discordName
-            }
-        ]);
-
-
-    if (error) {
-
-        console.error("Supabase Fehler:", error);
-
-        alert(
-            "Die Anmeldung konnte nicht gespeichert werden.\n\n" +
-            "Fehler: " + error.message
-        );
-
-        return;
-    }
-
-
-    alert(
-        "✅ Erfolgreich angemeldet!\n\n" +
-        "Minecraft: " + minecraftName +
-        "\nDiscord: " + discordName
+    console.error(
+        "Fehler beim Prüfen der Plätze:",
+        countError
     );
 
+    alert(
+        "Die freien Plätze konnten nicht geprüft werden."
+    );
 
-    form.reset();
-   
-    // Teilnehmerzahl sofort aktualisieren
-    updateParticipantCount();
-    
-});
+    return;
+}
+
+
+if (count >= currentEvent.max_participants) {
+
+    alert(
+        "❌ Dieses Event ist voll!\n\n" +
+        count + " / " +
+        currentEvent.max_participants +
+        " Plätze belegt."
+    );
+
+    return;
+}
 
 // ========================================
 // TEILNEHMERZAHL
