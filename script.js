@@ -159,132 +159,260 @@ async function updateParticipantCount() {
 }
 
 // ========================================
-// EVENT-DATEN AUS SUPABASE
+// AKTUELLES EVENT
 // ========================================
 
-async function loadEventSettings() {
+let currentEvent = null;
+
+
+// ========================================
+// NÄCHSTES EVENT LADEN
+// ========================================
+
+async function loadCurrentEvent() {
 
     const { data, error } = await supabaseDB
-        .from("event_settings")
+        .from("events")
         .select("*")
-        .eq("id", 1)
+        .gte("event_date", new Date().toISOString().split("T")[0])
+        .order("event_date", { ascending: true })
+        .order("event_time", { ascending: true })
+        .limit(1)
         .single();
 
+
     if (error) {
-        console.error("Fehler beim Laden des Events:", error);
+
+        console.error(
+            "Fehler beim Laden des Events:",
+            error
+        );
+
         return;
     }
 
-    // Titel
+
+    currentEvent = data;
+
+
+    // ========================================
+    // TEXT AUF DER WEBSITE
+    // ========================================
+
     document.getElementById("event-title").textContent =
         "🏁 " + data.title;
 
     document.getElementById("event-card-title").textContent =
         data.title;
 
-    // Beschreibung
     document.getElementById("event-description").textContent =
-        data.description;
+        data.description || "";
 
     document.getElementById("event-card-description").textContent =
-        data.description;
+        data.description || "";
 
-    // Datum
-    const date = new Date(data.event_date + "T00:00:00");
 
-    const formattedDate = date.toLocaleDateString("de-DE", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric"
-    });
+    // ========================================
+    // DATUM
+    // ========================================
+
+    const date = new Date(
+        data.event_date + "T00:00:00"
+    );
+
+
+    const formattedDate =
+        date.toLocaleDateString("de-DE", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric"
+        });
+
 
     document.getElementById("event-date").textContent =
         formattedDate;
 
-    // Uhrzeit
+
+    // ========================================
+    // UHRZEIT
+    // ========================================
+
+    const time =
+        data.event_time.substring(0, 5);
+
+
     document.getElementById("event-time").textContent =
-        data.event_time.substring(0, 5) + " Uhr";
+        time + " Uhr";
 
-    // Ort
+
+    // ========================================
+    // ORT
+    // ========================================
+
     document.getElementById("event-location").textContent =
-        data.location;
+        data.location || "";
 
-    // Server
+
+    // ========================================
+    // SERVER
+    // ========================================
+
     document.getElementById("event-server").textContent =
-        data.server_ip;
+        data.server_ip || "";
 
-    // Countdown-Anzeige
+
+    // ========================================
+    // COUNTDOWN
+    // ========================================
+
     document.getElementById("countdown-date").textContent =
-        formattedDate + " • " +
-        data.event_time.substring(0, 5) + " Uhr";
+        formattedDate + " • " + time + " Uhr";
 
-    // Countdown-Zeit aktualisieren
-    const eventDateFromDB =
+
+    const eventTimestamp =
         new Date(
-            data.event_date + "T" +
-            data.event_time
+            data.event_date + "T" + data.event_time
         ).getTime();
 
-    startDatabaseCountdown(eventDateFromDB);
+
+    startDatabaseCountdown(eventTimestamp);
+
+
+    // ========================================
+    // TEILNEHMER
+    // ========================================
+
+    updateParticipantCount();
+
 }
 
 
 // ========================================
-// COUNTDOWN AUS EVENT-DATENBANK
+// COUNTDOWN
 // ========================================
 
 function startDatabaseCountdown(eventTimestamp) {
 
     function updateDatabaseCountdown() {
 
-        const now = new Date().getTime();
-
         const difference =
-            eventTimestamp - now;
+            eventTimestamp - new Date().getTime();
+
 
         if (difference <= 0) {
 
-            document.getElementById("countdown").textContent =
+            document.getElementById(
+                "countdown"
+            ).textContent =
                 "🏁 DAS RENNEN LÄUFT!";
 
             return;
         }
 
+
         const days =
             Math.floor(
-                difference / (1000 * 60 * 60 * 24)
+                difference /
+                (1000 * 60 * 60 * 24)
             );
+
 
         const hours =
             Math.floor(
-                (difference % (1000 * 60 * 60 * 24))
-                / (1000 * 60 * 60)
+                (
+                    difference %
+                    (1000 * 60 * 60 * 24)
+                ) /
+                (1000 * 60 * 60)
             );
+
 
         const minutes =
             Math.floor(
-                (difference % (1000 * 60 * 60))
-                / (1000 * 60)
+                (
+                    difference %
+                    (1000 * 60 * 60)
+                ) /
+                (1000 * 60)
             );
+
 
         const seconds =
             Math.floor(
-                (difference % (1000 * 60))
-                / 1000
+                (
+                    difference %
+                    (1000 * 60)
+                ) /
+                1000
             );
 
-        document.getElementById("countdown").textContent =
+
+        document.getElementById(
+            "countdown"
+        ).textContent =
+
             `${days}T ` +
             `${String(hours).padStart(2, "0")}:` +
             `${String(minutes).padStart(2, "0")}:` +
             `${String(seconds).padStart(2, "0")}`;
     }
 
+
     updateDatabaseCountdown();
 
-    setInterval(updateDatabaseCountdown, 1000);
+    setInterval(
+        updateDatabaseCountdown,
+        1000
+    );
 }
 
 
-// Event laden
-loadEventSettings();
+// ========================================
+// TEILNEHMERZAHL
+// ========================================
+
+async function updateParticipantCount() {
+
+    if (!currentEvent) {
+        return;
+    }
+
+
+    const { count, error } =
+        await supabaseDB
+            .from("anmeldungen")
+            .select("*", {
+                count: "exact",
+                head: true
+            })
+            .eq("event_id", currentEvent.id);
+
+
+    if (error) {
+
+        console.error(
+            "Fehler beim Laden der Teilnehmerzahl:",
+            error
+        );
+
+        return;
+    }
+
+
+    const element =
+        document.getElementById(
+            "participant-count"
+        );
+
+
+    if (element) {
+        element.textContent = count;
+    }
+}
+
+
+// ========================================
+// EVENT STARTEN
+// ========================================
+
+loadCurrentEvent();
