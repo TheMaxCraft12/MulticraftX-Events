@@ -122,7 +122,7 @@ form.addEventListener("submit", async function(event) {
 
     // Teilnehmer in Supabase speichern
     const { data, error } = await supabaseDB
-        .from("participants")
+        .from("anmeldungen")
         .insert([
             {
                 minecraft_name: minecraftName,
