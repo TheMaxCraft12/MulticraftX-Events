@@ -673,11 +673,6 @@ if (form) {
 }
 
 
-// ========================================
-// START
-// ========================================
-
-loadCurrentEvent();
 
 // ========================================
 // RENN FIRMEN VERFÜGBARKEIT
@@ -1205,3 +1200,13 @@ async function loadVoteResults() {
         }
     );
 }
+
+async function startWebsite() {
+
+    await loadCurrentEvent();
+
+    await setupVoting();
+
+}
+
+startWebsite();
