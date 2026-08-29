@@ -1,1 +1,343 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0b0b0b;
+    color: white;
+}
+
+
+/* =========================
+   HEADER
+========================= */
+
+header {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 70px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 8%;
+
+    background: rgba(10, 10, 10, 0.95);
+
+    border-bottom: 1px solid #292929;
+
+    z-index: 1000;
+}
+
+.logo {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+nav {
+    display: flex;
+    gap: 30px;
+}
+
+nav a {
+    color: #cccccc;
+    text-decoration: none;
+
+    transition: 0.2s;
+}
+
+nav a:hover {
+    color: #55ff55;
+}
+
+
+/* =========================
+   HERO
+========================= */
+
+.hero {
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+
+    padding: 100px 10%;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(0, 0, 0, 0.95),
+            rgba(0, 0, 0, 0.45)
+        ),
+        url("images/background.jpg");
+
+    background-size: cover;
+    background-position: center;
+}
+
+.hero-content {
+    max-width: 750px;
+}
+
+.subtitle {
+    color: #55ff55;
+
+    letter-spacing: 4px;
+
+    font-weight: bold;
+
+    margin-bottom: 20px;
+}
+
+h1 {
+    font-size: clamp(45px, 7vw, 90px);
+
+    line-height: 1;
+
+    margin-bottom: 25px;
+}
+
+.hero-content p {
+    color: #cccccc;
+
+    font-size: 18px;
+
+    line-height: 1.6;
+
+    margin-bottom: 30px;
+}
+
+
+/* =========================
+   BUTTON
+========================= */
+
+.button,
+button {
+    display: inline-block;
+
+    padding: 14px 25px;
+
+    border: none;
+
+    border-radius: 6px;
+
+    background: #55ff55;
+
+    color: #071007;
+
+    font-weight: bold;
+
+    font-size: 15px;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+.button:hover,
+button:hover {
+    transform: translateY(-3px);
+
+    box-shadow:
+        0 8px 25px rgba(85, 255, 85, 0.25);
+}
+
+
+/* =========================
+   SECTIONS
+========================= */
+
+.section {
+    padding: 100px 10%;
+}
+
+h2 {
+    font-size: 38px;
+
+    margin-bottom: 40px;
+}
+
+
+/* =========================
+   EVENT CARD
+========================= */
+
+.event-card {
+    max-width: 800px;
+
+    display: grid;
+
+    grid-template-columns: 180px 1fr;
+
+    gap: 30px;
+
+    padding: 30px;
+
+    background: #151515;
+
+    border: 1px solid #292929;
+
+    border-radius: 12px;
+
+    transition: 0.3s;
+}
+
+.event-card:hover {
+    border-color: #55ff55;
+
+    transform: translateY(-5px);
+}
+
+.event-icon {
+    height: 180px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    font-size: 70px;
+
+    background: #202020;
+
+    border-radius: 10px;
+}
+
+.event-card h3 {
+    font-size: 28px;
+
+    margin-bottom: 15px;
+}
+
+.event-card p {
+    color: #aaaaaa;
+
+    line-height: 1.6;
+}
+
+.event-info {
+    margin-top: 20px;
+
+    line-height: 2;
+
+    color: #cccccc;
+}
+
+
+/* =========================
+   ANMELDUNG
+========================= */
+
+.registration {
+    max-width: 600px;
+
+    padding: 30px;
+
+    background: #151515;
+
+    border: 1px solid #292929;
+
+    border-radius: 12px;
+}
+
+.registration > p {
+    color: #aaaaaa;
+
+    margin-bottom: 25px;
+}
+
+form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+label {
+    margin-top: 10px;
+
+    font-weight: bold;
+}
+
+input {
+    padding: 14px;
+
+    border: 1px solid #333;
+
+    border-radius: 6px;
+
+    background: #0d0d0d;
+
+    color: white;
+
+    font-size: 16px;
+
+    outline: none;
+}
+
+input:focus {
+    border-color: #55ff55;
+}
+
+form button {
+    margin-top: 15px;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    padding: 50px 10%;
+
+    text-align: center;
+
+    background: #070707;
+
+    color: #777777;
+}
+
+
+/* =========================
+   HANDY
+========================= */
+
+@media (max-width: 700px) {
+
+    header {
+        padding: 0 20px;
+    }
+
+    nav {
+        display: none;
+    }
+
+    .hero {
+        padding: 100px 25px;
+    }
+
+    .section {
+        padding: 70px 25px;
+    }
+
+    .event-card {
+        grid-template-columns: 1fr;
+    }
+
+  }
