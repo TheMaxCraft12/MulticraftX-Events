@@ -4,9 +4,9 @@
 
 const SUPABASE_URL = "https://hdbgpedywtsiazbawbao.supabase.co";
 
-const SUPABASE_KEY = "sb_publishable_Ab0ub7SN99UIjDdXCdSNNw_4FSlDmDa";
+const SUPABASE_KEY = "DEIN_ECHTER_PUBLISHABLE_KEY";
 
-const supabaseClient = window.supabase.createClient(
+const supabaseDB = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
@@ -121,7 +121,7 @@ form.addEventListener("submit", async function(event) {
 
 
     // Teilnehmer in Supabase speichern
-    const { data, error } = await supabaseClient
+    const { data, error } = await supabaseDB
         .from("participants")
         .insert([
             {
