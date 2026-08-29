@@ -154,3 +154,23 @@ form.addEventListener("submit", async function(event) {
     form.reset();
 
 });
+
+// ========================================
+// TEILNEHMERZAHL
+// ========================================
+
+async function updateParticipantCount() {
+
+    const { count, error } = await supabaseDB
+        .from("anmeldungen")
+        .select("*", { count: "exact", head: true });
+
+    if (error) {
+        console.error("Fehler beim Laden der Teilnehmerzahl:", error);
+        return;
+    }
+
+    document.getElementById("participant-count").textContent = count;
+}
+
+updateParticipantCount();
