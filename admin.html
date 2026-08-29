@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin – Minecraft Events</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">🔐 EVENT ADMIN</div>
+
+        <nav>
+            <a href="index.html">Website</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <section class="section">
+
+            <h2>🔐 Admin-Bereich</h2>
+
+            <div class="registration">
+
+                <h3>Anmelden</h3>
+
+                <form id="login-form">
+
+                    <label for="email">
+                        E-Mail
+                    </label>
+
+                    <input
+                        type="email"
+                        id="email"
+                        placeholder="Deine E-Mail"
+                        required
+                    >
+
+                    <label for="password">
+                        Passwort
+                    </label>
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Dein Passwort"
+                        required
+                    >
+
+                    <button type="submit">
+                        🔐 Einloggen
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const SUPABASE_URL =
+            "https://hdbgpedywtsiazbawbao.supabase.co";
+
+        const SUPABASE_KEY =
+            "sb_publishable_Ab0ub7SN99UIjDdXCdSNNw_4FSlDmDa";
+
+        const supabaseDB =
+            window.supabase.createClient(
+                SUPABASE_URL,
+                SUPABASE_KEY
+            );
+
+        const loginForm =
+            document.getElementById("login-form");
+
+        loginForm.addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const email =
+                document.getElementById("email").value;
+
+            const password =
+                document.getElementById("password").value;
+
+            const { error } =
+                await supabaseDB.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+            if (error) {
+
+                alert("❌ Login fehlgeschlagen:\n" + error.message);
+
+                return;
+            }
+
+            alert("✅ Erfolgreich eingeloggt!");
+
+            window.location.href = "admin-panel.html";
+
+        });
+    </script>
+
+</body>
+</html>
