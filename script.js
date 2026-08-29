@@ -1070,4 +1070,271 @@ if (voteButton) {
 
                 alert(
                     "Bitte wähle zuerst einen Fahrer aus."
-             
+                );
+
+                return;
+            }
+
+
+            const participantId =
+                Number(
+                    selected.value
+                );
+
+
+            const {
+                error
+            } =
+                await supabaseDB
+                    .from("votes")
+                    .insert([
+                        {
+                            event_id:
+                                currentEvent.id,
+
+                            voter_id:
+                                currentUser.id,
+
+                            participant_id:
+                                participantId
+                        }
+                    ]);
+
+
+            if (error) {
+
+                console.error(
+                    "Vote-Fehler:",
+                    error
+                );
+
+
+                if (
+                    error.code ===
+                    "23505"
+                ) {
+
+                    alert(
+                        "❌ Du hast bereits für dieses Event abgestimmt."
+                    );
+
+                } else {
+
+                    alert(
+                        "❌ Deine Stimme konnte nicht gespeichert werden.\n\n" +
+                        error.message
+                    );
+                }
+
+                return;
+            }
+
+
+            alert(
+                "✅ Deine Stimme wurde gespeichert!"
+            );
+
+
+            voteButton.disabled =
+                true;
+
+            voteButton.textContent =
+                "✅ Stimme abgegeben";
+
+
+            await loadVoteResults();
+        }
+    );
+}
+
+
+// ========================================
+// VOTE-ERGEBNISSE
+// ========================================
+
+async function loadVoteResults() {
+
+    if (!currentEvent) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseDB
+            .from("votes")
+            .select(
+                "participant_id, anmeldungen(minecraft_name)"
+            )
+            .eq(
+                "event_id",
+                currentEvent.id
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Fehler beim Laden der Ergebnisse:",
+            error
+        );
+
+        return;
+    }
+
+
+    const results = {};
+
+
+    data.forEach(
+        vote => {
+
+            const id =
+                vote.participant_id;
+
+
+            if (!results[id]) {
+
+                results[id] = {
+
+                    name:
+                        vote.anmeldungen
+                            ?.minecraft_name ||
+                        "Unbekannt",
+
+                    votes:
+                        0
+                };
+            }
+
+
+            results[id].votes++;
+        }
+    );
+
+
+    const totalVotes =
+        data.length;
+
+
+    const sorted =
+        Object.values(
+            results
+        ).sort(
+            (a, b) =>
+                b.votes -
+                a.votes
+        );
+
+
+    const resultsElement =
+        document.getElementById(
+            "vote-results"
+        );
+
+
+    if (!resultsElement) {
+        return;
+    }
+
+
+    resultsElement.innerHTML = `
+        <h3>📊 Aktuelle Ergebnisse</h3>
+
+        <p class="vote-total">
+            ${totalVotes}
+            Stimme${totalVotes === 1 ? "" : "n"}
+            insgesamt
+        </p>
+    `;
+
+
+    if (
+        sorted.length === 0
+    ) {
+
+        resultsElement.innerHTML += `
+            <p>Noch keine Stimmen abgegeben.</p>
+        `;
+
+        return;
+    }
+
+
+    sorted.forEach(
+        result => {
+
+            const percentage =
+                totalVotes > 0
+                    ? Math.round(
+                        (
+                            result.votes /
+                            totalVotes
+                        ) *
+                        100
+                    )
+                    : 0;
+
+
+            const resultDiv =
+                document.createElement(
+                    "div"
+                );
+
+
+            resultDiv.className =
+                "vote-result";
+
+
+            resultDiv.innerHTML = `
+
+                <div class="vote-result-header">
+
+                    <strong>
+                        🏎️ ${result.name}
+                    </strong>
+
+                    <span>
+                        ${percentage}%
+                        ·
+                        ${result.votes}
+                        Stimme${result.votes === 1 ? "" : "n"}
+                    </span>
+
+                </div>
+
+
+                <div class="vote-bar-background">
+
+                    <div
+                        class="vote-bar"
+                        style="width: ${percentage}%"
+                    ></div>
+
+                </div>
+            `;
+
+
+            resultsElement.appendChild(
+                resultDiv
+            );
+        }
+    );
+}
+
+
+// ========================================
+// WEBSITE STARTEN
+// ========================================
+
+async function startWebsite() {
+
+    await loadCurrentEvent();
+
+    await setupVoting();
+}
+
+
+startWebsite();
