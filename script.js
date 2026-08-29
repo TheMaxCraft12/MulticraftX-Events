@@ -1,4 +1,17 @@
 // ========================================
+// SUPABASE
+// ========================================
+
+const SUPABASE_URL = "https://hdbgpedywtsiazbawbao.supabase.co";
+
+const SUPABASE_KEY = "DEIN_PUBLISHABLE_KEY";
+
+const supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+// ========================================
 // SERVER
 // ========================================
 
@@ -82,24 +95,21 @@ setInterval(updateCountdown, 1000);
 
 updateCountdown();
 
-
 // ========================================
 // ANMELDUNG
 // ========================================
 
 const form = document.querySelector("form");
 
-
-form.addEventListener("submit", function(event) {
+form.addEventListener("submit", async function(event) {
 
     event.preventDefault();
 
-
     const minecraftName =
-        document.getElementById("minecraft-name").value;
+        document.getElementById("minecraft-name").value.trim();
 
     const discordName =
-        document.getElementById("discord-name").value;
+        document.getElementById("discord-name").value.trim();
 
 
     if (!minecraftName || !discordName) {
@@ -110,10 +120,37 @@ form.addEventListener("submit", function(event) {
     }
 
 
+    // Teilnehmer in Supabase speichern
+    const { data, error } = await supabase
+        .from("participants")
+        .insert([
+            {
+                minecraft_name: minecraftName,
+                discord_name: discordName
+            }
+        ]);
+
+
+    if (error) {
+
+        console.error("Supabase Fehler:", error);
+
+        alert(
+            "Die Anmeldung konnte nicht gespeichert werden.\n\n" +
+            "Fehler: " + error.message
+        );
+
+        return;
+    }
+
+
     alert(
-        "Anmeldung vorbereitet!\n\n" +
+        "✅ Erfolgreich angemeldet!\n\n" +
         "Minecraft: " + minecraftName +
         "\nDiscord: " + discordName
     );
+
+
+    form.reset();
 
 });
