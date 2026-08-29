@@ -80,31 +80,31 @@ async function loadCurrentEvent() {
                 }
             )
             .limit(1)
-            .single();
 
 
     if (error) {
 
-        console.error(
-            "Fehler beim Laden des Events:",
-            error
+    console.error(
+        "Fehler beim Laden des Events:",
+        error
+    );
+
+    const title =
+        document.getElementById(
+            "event-title"
         );
 
-        const title =
-            document.getElementById(
-                "event-title"
-            );
-
-        if (title) {
-            title.textContent =
-                "❌ Event konnte nicht geladen werden";
-        }
-
-        return;
+    if (title) {
+        title.textContent =
+            "❌ Event konnte nicht geladen werden: " +
+            error.message;
     }
 
+    return;
+}
 
-    currentEvent = data;
+
+    currentEvent = data[0];
 
 
     // ========================================
@@ -1331,10 +1331,48 @@ async function loadVoteResults() {
 
 async function startWebsite() {
 
-    await loadCurrentEvent();
+    try {
 
-    await setupVoting();
+        console.log("1. Website startet");
+
+        await loadCurrentEvent();
+
+        console.log("2. Event geladen:", currentEvent);
+
+        if (!currentEvent) {
+
+            const voteList =
+                document.getElementById("vote-list");
+
+            if (voteList) {
+                voteList.textContent =
+                    "❌ Kein zukünftiges Event gefunden.";
+            }
+
+            return;
+        }
+
+        await setupVoting();
+
+        console.log("3. Voting gestartet");
+
+    } catch (error) {
+
+        console.error(
+            "STARTFEHLER:",
+            error
+        );
+
+        const voteList =
+            document.getElementById("vote-list");
+
+        if (voteList) {
+
+            voteList.textContent =
+                "❌ Fehler: " +
+                error.message;
+        }
+    }
 }
-
 
 startWebsite();
