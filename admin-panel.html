@@ -68,6 +68,18 @@
                 id="event-description"
             >
 
+            <label>Event-Kategorie</label>
+
+<select id="event-category" required>
+    <option value="rennen">🏎️ Rennen</option>
+    <option value="bau">🏗️ Bau-Event</option>
+    <option value="pvp">⚔️ PvP</option>
+    <option value="minigame">🎮 Minigame</option>
+    <option value="challenge">🎯 Challenge</option>
+    <option value="turnier">🏆 Turnier</option>
+    <option value="community">🎉 Community</option>
+    <option value="sonstiges" selected>❓ Sonstiges</option>
+</select>
 
             <label>Datum</label>
 
@@ -259,7 +271,12 @@ async function loadEvents() {
 
         box.innerHTML = `
 
-            <h3>🏁 ${event.title}</h3>
+            <h3>📅 ${event.title}</h3>
+
+            <p>
+                Kategorie:
+                ${event.category || "sonstiges"}
+            </p>
 
             <p>
                 📅 ${event.event_date}
@@ -364,6 +381,9 @@ async function editEvent(id) {
     document.getElementById("event-description")
         .value = data.description || "";
 
+    document.getElementById("event-category")
+    .value = data.category || "sonstiges";
+    
     document.getElementById("event-date")
         .value = data.event_date;
 
@@ -423,6 +443,11 @@ document
                     "event-description"
                 ).value.trim(),
 
+            category:
+                document.getElementById(
+                    "event-category"
+                ).value,
+            
             event_date:
                 document.getElementById(
                     "event-date"
