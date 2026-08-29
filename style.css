@@ -317,7 +317,37 @@ footer {
 /* =========================
    HANDY
 ========================= */
+/* =========================
+   COUNTDOWN
+========================= */
 
+.countdown-section {
+    padding: 80px 20px;
+
+    text-align: center;
+
+    background: #111111;
+}
+
+.countdown-section h2 {
+    margin-bottom: 25px;
+}
+
+#countdown {
+    font-size: clamp(35px, 8vw, 75px);
+
+    font-weight: bold;
+
+    color: #55ff55;
+
+    letter-spacing: 4px;
+
+    margin-bottom: 15px;
+}
+
+.countdown-section p {
+    color: #888888;
+}
 @media (max-width: 700px) {
 
     header {
