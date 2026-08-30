@@ -285,20 +285,6 @@ if (timeElement) {
     await updateRacingCompanies();
 }
 
-const voteSection =
-    document.getElementById("vote");
-
-if (voteSection) {
-    voteSection.style.display =
-        currentEvent.voting_enabled
-            ? ""
-            : "none";
-}
-
-const racingCompanySection =
-    document.getElementById(
-        "racing-company-section"
-    );
 
 if (racingCompanySection) {
     racingCompanySection.style.display =
