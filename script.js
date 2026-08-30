@@ -285,12 +285,30 @@ if (timeElement) {
     await updateRacingCompanies();
 }
 
+const racingCompanySection =
+    document.getElementById("racing-company-section");
 
 if (racingCompanySection) {
     racingCompanySection.style.display =
         currentEvent.racing_companies_enabled
             ? ""
             : "none";
+}
+
+// ========================================
+// VOTING EIN-/AUSBLENDEN
+// ========================================
+
+const voteSection =
+    document.getElementById("vote");
+
+if (voteSection) {
+    voteSection.style.display =
+        currentEvent.voting_enabled
+            ? ""
+            : "none";
+}
+
 }
     
 // ========================================
