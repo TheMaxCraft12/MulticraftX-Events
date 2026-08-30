@@ -281,10 +281,20 @@ if (timeElement) {
     // RENN FIRMEN
     // ========================================
 
+    if (currentEvent.racing_companies_enabled) {
     await updateRacingCompanies();
 }
 
+const voteSection =
+    document.getElementById("vote");
 
+if (voteSection) {
+    voteSection.style.display =
+        currentEvent.voting_enabled
+            ? ""
+            : "none";
+}
+    
 // ========================================
 // COUNTDOWN
 // ========================================
