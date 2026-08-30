@@ -294,6 +294,18 @@ if (voteSection) {
             ? ""
             : "none";
 }
+
+const racingCompanySection =
+    document.getElementById(
+        "racing-company-section"
+    );
+
+if (racingCompanySection) {
+    racingCompanySection.style.display =
+        currentEvent.racing_companies_enabled
+            ? ""
+            : "none";
+}
     
 // ========================================
 // COUNTDOWN
