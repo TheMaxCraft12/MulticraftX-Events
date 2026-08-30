@@ -71,6 +71,24 @@
             <label>Event-Kategorie</label>
 
 <select id="event-category" required>
+   <label>
+    <input
+        type="checkbox"
+        id="voting-enabled"
+        checked
+    >
+    🗳️ Voting aktivieren
+</label>
+
+<br>
+
+<label>
+    <input
+        type="checkbox"
+        id="racing-companies-enabled"
+    >
+    🏎️ Rennfirmen aktivieren
+</label>
     <option value="rennen">🏎️ Rennen</option>
     <option value="bau">🏗️ Bau-Event</option>
     <option value="pvp">⚔️ PvP</option>
@@ -383,6 +401,12 @@ async function editEvent(id) {
 
     document.getElementById("event-category")
     .value = data.category || "sonstiges";
+
+    document.getElementById("voting-enabled")
+    .checked = data.voting_enabled ?? true;
+
+    document.getElementById("racing-companies-enabled")
+    .checked = data.racing_companies_enabled ?? false;
     
     document.getElementById("event-date")
         .value = data.event_date;
@@ -447,6 +471,16 @@ document
                 document.getElementById(
                     "event-category"
                 ).value,
+
+            voting_enabled:
+                document.getElementById(
+                    "voting-enabled"
+                ).checked,
+
+            racing_companies_enabled:
+                document.getElementById(
+                    "racing-companies-enabled"
+                ).checked,
             
             event_date:
                 document.getElementById(
